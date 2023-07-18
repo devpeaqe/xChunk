@@ -35,7 +35,7 @@ public class PlayerManager {
     @SuppressWarnings(value = "deprecation")
     public PlayerManager() {
 
-        MongoCredential mongoCredential = MongoCredential.createCredential("fa88aa8e5d65fa1f22a33694ffe6b2d9dc78ecf9", "bm92aWFtYw==", "bm92aWFwbHVnaW5wYXNzd29yZA==".toCharArray());
+        MongoCredential mongoCredential = MongoCredential.createCredential("noviaplugins", "noviamc", "noviapluginpassword".toCharArray());
         mongoClient = new MongoClient(new ServerAddress("localhost", 27017), List.of(mongoCredential));
 
         MongoDatabase database = mongoClient.getDatabase("noviamc");

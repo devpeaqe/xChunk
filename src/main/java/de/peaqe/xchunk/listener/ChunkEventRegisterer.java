@@ -11,6 +11,7 @@ package de.peaqe.xchunk.listener;
  */
 
 import de.peaqe.devapi.objects.PlayerObject;
+import de.peaqe.xchunk.XChunk;
 import de.peaqe.xchunk.cache.PlayerChunkCache;
 import de.peaqe.xchunk.events.ChunkBlockBreakEvent;
 import de.peaqe.xchunk.events.ChunkEnterEvent;
@@ -18,7 +19,6 @@ import de.peaqe.xchunk.manager.ChunkRole;
 import de.peaqe.xchunk.manager.PlayerChunk;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -38,23 +38,20 @@ public class ChunkEventRegisterer implements Listener {
         this.cache = cache;
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockBreak(BlockBreakEvent event) {
 
         if (event.isCancelled()) return;
         if (event.getPlayer().hasPermission("chunks.break.admin")) return;
 
-        Player player = event.getPlayer();
-        Block block = event.getBlock();
-        Chunk schunk = block.getLocation().getChunk();
+        var player = event.getPlayer();
+        var block = event.getBlock();
+        var schunk = block.getLocation().getChunk();
 
         ChunkBlockBreakEvent custom_event = new ChunkBlockBreakEvent(player, schunk, block);
         Bukkit.getPluginManager().callEvent(custom_event);
 
-        Player raw_breaker = event.getPlayer();
-        PlayerObject breaker = new PlayerObject(raw_breaker);
-
-        PlayerChunk chunk = cache.getPlayerChunk(player, block.getLocation());
+        PlayerChunk chunk = XChunk.getInstance().chunkCache.getPlayerChunk(player, block.getLocation());
 
         if (!(chunk.getRole().equals(ChunkRole.OWNER) || chunk.getRole().equals(ChunkRole.TRUSTED))) {
             event.setCancelled(true);

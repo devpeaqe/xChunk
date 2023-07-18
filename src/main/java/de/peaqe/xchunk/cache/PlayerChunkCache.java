@@ -52,12 +52,12 @@ public class PlayerChunkCache {
         return chunk;
     }
 
-    private String getPlayerChunkCacheKey(Player player, Location location) {
+    public String getPlayerChunkCacheKey(Player player, Location location) {
         UUID playerUUID = player.getUniqueId();
         int chunkX = location.getChunk().getX();
         int chunkZ = location.getChunk().getZ();
         String chunkID = chunkX + "." + chunkZ;
-        return playerUUID.toString() + "_" + chunkID;
+        return playerUUID + "_" + chunkID;
     }
 
     public void reloadPlayerChunk(Player player, Location location) {

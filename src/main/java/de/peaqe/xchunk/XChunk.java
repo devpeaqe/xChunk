@@ -21,6 +21,14 @@ public final class XChunk extends JavaPlugin {
 
     public PlayerChunkCache chunkCache;
 
+    /**
+     * TODO; Fix block break internal error
+     * TODO; Add /chunk tp command
+     * TODO; Add /chunk visit command
+     * TODO; Fix player damage by Player on Chunks
+     * TODO; Add Chunk flags? (IDEA)
+     */
+
     @Override
     public void onEnable() {
 

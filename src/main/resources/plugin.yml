@@ -9,3 +9,7 @@ authors:
 commands:
   chunk:
     description: "Chunk Command"
+    aliases:
+      - c
+      - plot
+      - p
