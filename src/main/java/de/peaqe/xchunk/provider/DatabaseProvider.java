@@ -18,6 +18,7 @@ import com.mongodb.client.MongoDatabase;
 import de.peaqe.devapi.DevAPI;
 import de.peaqe.devapi.objects.PlayerObject;
 import de.peaqe.xchunk.XChunk;
+import de.peaqe.xchunk.manager.ChunkUser;
 import de.peaqe.xchunk.utils.UUIDFetcher;
 import org.bson.Document;
 import org.bukkit.Chunk;

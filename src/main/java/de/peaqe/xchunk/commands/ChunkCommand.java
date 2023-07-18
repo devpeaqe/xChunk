@@ -41,7 +41,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
         MessageContents contents = new MessageContents(main.prefix);
 
         PlayerObject player = new PlayerObject((Player) sender);
-        PlayerChunk playerChunk = new PlayerChunk(player);
+        PlayerChunk playerChunk = XChunk.getInstance().chunkCache.getPlayerChunk((Player) sender);
 
         if (args.length == 2) {
 
@@ -75,7 +75,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
 
                 // Check if the entered Player is the Chunk owner
                 if (player.getUUID().equals(player_uuid)) {
-                    player.sendMessage("Du kannst dich nicht selber auf deinem §cChunk §7als §cHelfer §7hinzufügen!");
+                    player.sendMessage(main.prefix + "Du kannst dich nicht selber auf deinem §cChunk §7als §cHelfer §7hinzufügen!");
                     return true;
                 }
 
@@ -86,6 +86,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
                 }
 
                 playerChunk.trustPlayer(player_name);
+                XChunk.getInstance().chunkCache.reloadPlayerChunk((Player) sender, player.getLocation());
                 player.sendMessage(main.prefix + "Du hast den Spieler §c" + player_name + "§a erfolgreich §7auf deinem §cChunk §7vertraut!");
 
                 return true;
@@ -120,7 +121,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
 
                 // Check if the entered Player is the Chunk owner
                 if (player.getUUID().equals(player_uuid)) {
-                    player.sendMessage("Du kannst dir nicht selber auf deinem §cChunk §7den Zutritt verbieten!");
+                    player.sendMessage(main.prefix + "Du kannst dir nicht selber auf deinem §cChunk §7den Zutritt verbieten!");
                     return true;
                 }
 
@@ -131,6 +132,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
                 }
 
                 playerChunk.banPlayer(player_name);
+                XChunk.getInstance().chunkCache.reloadPlayerChunk((Player) sender, player.getLocation());
                 player.sendMessage(main.prefix + "Du hast den Spieler §c" + player_name + "§a erfolgreich §7von deinem §cChunk §7gebannt!");
 
                 return true;
@@ -165,7 +167,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
 
                 // Check if the entered Player is the Chunk owner
                 if (player.getUUID().equals(player_uuid)) {
-                    player.sendMessage("Du kannst dich nicht selber von deinem §cChunk §7entfernen!");
+                    player.sendMessage(main.prefix + "Du kannst dich nicht selber von deinem §cChunk §7entfernen!");
                     return true;
                 }
 
@@ -176,6 +178,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
                 }
 
                 playerChunk.removePlayer(player_name);
+                XChunk.getInstance().chunkCache.reloadPlayerChunk((Player) sender, player.getLocation());
                 player.sendMessage(main.prefix + "Du hast den Spieler §c" + player_name + "§a erfolgreich §7auf deinem §cChunk §7vertraut!");
 
                 return true;
@@ -240,6 +243,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
                 }
 
                 playerChunk.claim();
+                XChunk.getInstance().chunkCache.reloadPlayerChunk((Player) sender, player.getLocation());
                 player.sendMessage(main.prefix + "Der Chunk, mit der ID §c" + playerChunk.getChunkID() + " §7wurde §aerfolgreich §7für dich gesichert!");
 
                 return true;
@@ -247,6 +251,10 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
 
         }
 
+        player.sendMessage(contents.getUsage("chunk", "claim"));
+        player.sendMessage(contents.getUsage("chunk", "ban", "Spieler"));
+        player.sendMessage(contents.getUsage("chunk", "trust", "Spieler"));
+        player.sendMessage(contents.getUsage("chunk", "remove", "Spieler"));
         player.sendMessage(contents.getUsage("chunk", "info"));
         return false;
     }
@@ -258,7 +266,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
         if (!(sender instanceof Player)) return matches;
 
         PlayerObject player = new PlayerObject((Player) sender);
-        PlayerChunk playerChunk = new PlayerChunk(player);
+        PlayerChunk playerChunk = XChunk.getInstance().chunkCache.getPlayerChunk((Player) sender);
 
         if (args.length == 1) {
             matches.add("info");

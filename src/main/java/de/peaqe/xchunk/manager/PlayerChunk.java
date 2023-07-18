@@ -15,6 +15,7 @@ import de.peaqe.xchunk.provider.DatabaseProvider;
 import de.peaqe.xchunk.utils.UUIDFetcher;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,13 +24,14 @@ import java.util.UUID;
 @SuppressWarnings(value = "unused")
 public class PlayerChunk {
 
-    private final PlayerObject player;
+    private PlayerObject player;
     private UUID authorUUID;
     private String authorName;
     private String chunkID;
     private List<UUID> trustedPlayers;
     private List<UUID> bannedPlayers;
     private final boolean claimed;
+    private ChunkUser role;
 
     public PlayerChunk(PlayerObject player) {
 
@@ -44,6 +46,42 @@ public class PlayerChunk {
         this.trustedPlayers = provider.getTrustedPlayers(player.getLocation().getChunk());
         this.bannedPlayers = provider.getBannedPlayers(player.getLocation().getChunk());
 
+        if (player.getUUID().equals(this.authorUUID)) {
+            this.role = ChunkUser.OWNER;
+        } else if (this.isPlayerTrusted(player.getUUID())) {
+            this.role = ChunkUser.TRUSTED;
+        } else if (this.isPlayerBanned(player.getUUID())) {
+            this.role = ChunkUser.BANNED;
+        } else {
+            this.role = ChunkUser.VISITOR;
+        }
+
+        this.claimed = provider.chunkClaimed(chunkID);
+
+    }
+
+    public PlayerChunk(PlayerObject player, Location location) {
+
+        DatabaseProvider provider = new DatabaseProvider();
+        var chunk = location.getChunk();
+
+        this.authorUUID = provider.chunkAuthorUuid(provider.getChunkID(chunk));
+        this.authorName = provider.chunkAuthorName(provider.getChunkID(chunk));
+
+        this.chunkID = provider.getChunkID(chunk);
+        this.trustedPlayers = provider.getTrustedPlayers(chunk);
+        this.bannedPlayers = provider.getBannedPlayers(chunk);
+
+        if (player.getUUID().equals(this.authorUUID)) {
+            this.role = ChunkUser.OWNER;
+        } else if (this.isPlayerTrusted(player.getUUID())) {
+            this.role = ChunkUser.TRUSTED;
+        } else if (this.isPlayerBanned(player.getUUID())) {
+            this.role = ChunkUser.BANNED;
+        } else {
+            this.role = ChunkUser.VISITOR;
+        }
+
         this.claimed = provider.chunkClaimed(chunkID);
 
     }
@@ -53,8 +91,12 @@ public class PlayerChunk {
     }
 
     private PlayerObject getPlayer() {
+        if (player == null) {
+            throw new IllegalStateException("Player is null in PlayerChunk.");
+        }
         return player;
     }
+
 
     public Chunk getChunk() {
         return this.getPlayer().getLocation().getChunk();
@@ -170,5 +212,14 @@ public class PlayerChunk {
     public void claim() {
         new DatabaseProvider().saveChunk(player, getChunk());
     }
+
+    public ChunkUser getRole() {
+        return role;
+    }
+
+    public void setRole(ChunkUser role) {
+        this.role = role;
+    }
+
 
 }
