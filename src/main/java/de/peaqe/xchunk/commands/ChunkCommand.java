@@ -2,6 +2,7 @@ package de.peaqe.xchunk.commands;
 
 import de.peaqe.devapi.contents.MessageContents;
 import de.peaqe.xchunk.XChunk;
+import de.peaqe.xchunk.cache.PlayerChunkCache;
 import de.peaqe.xchunk.manager.ChunkRole;
 import de.peaqe.xchunk.manager.PlayerChunk;
 import de.peaqe.xchunk.utils.UUIDFetcher;
@@ -11,6 +12,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,7 +33,13 @@ import java.util.UUID;
 
 public class ChunkCommand implements CommandExecutor, TabExecutor {
 
-    XChunk main = XChunk.getInstance();
+    XChunk main;
+    PlayerChunkCache cache;
+
+    public ChunkCommand(XChunk main, PlayerChunkCache cache) {
+        this.main = main;
+        this.cache = cache;
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
@@ -39,8 +47,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
         if (!(sender instanceof Player player)) return true;
 
         MessageContents contents = new MessageContents(main.prefix);
-
-        PlayerChunk playerChunk = XChunk.getInstance().chunkCache.getPlayerChunk(player);
+        PlayerChunk playerChunk = this.cache.getPlayerChunk(player);
 
         if (args.length == 2) {
 
