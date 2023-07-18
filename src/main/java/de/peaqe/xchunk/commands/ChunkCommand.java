@@ -3,6 +3,7 @@ package de.peaqe.xchunk.commands;
 import de.peaqe.devapi.contents.MessageContents;
 import de.peaqe.devapi.objects.PlayerObject;
 import de.peaqe.xchunk.XChunk;
+import de.peaqe.xchunk.manager.ChunkRole;
 import de.peaqe.xchunk.manager.PlayerChunk;
 import de.peaqe.xchunk.utils.UUIDFetcher;
 import org.bukkit.Bukkit;
@@ -45,7 +46,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
 
         if (args.length == 2) {
 
-            if (args[0].equalsIgnoreCase("trust")) {
+            if (args[0].equalsIgnoreCase("trust") || args[0].equalsIgnoreCase("add")) {
 
                 var argument = args[1];
 
@@ -91,7 +92,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
 
                 return true;
 
-            } else if (args[0].equalsIgnoreCase("deny")) {
+            } else if (args[0].equalsIgnoreCase("deny") || args[0].equalsIgnoreCase("ban")) {
 
                 var argument = args[1];
 
@@ -137,7 +138,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
 
                 return true;
 
-            } else if (args[0].equalsIgnoreCase("remove")) {
+            } else if (args[0].equalsIgnoreCase("remove") || args[0].equalsIgnoreCase("untrust") || args[0].equalsIgnoreCase("undeny") || args[0].equalsIgnoreCase("unban")) {
 
                 var argument = args[1];
 
@@ -187,7 +188,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
         }
 
         else if (args.length == 1) {
-            if (args[0].equalsIgnoreCase("info")) {
+            if (args[0].equalsIgnoreCase("info") || args[0].equalsIgnoreCase("i")) {
 
                 if (playerChunk.isClaimed()) {
 
@@ -238,7 +239,7 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
             if (args[0].equalsIgnoreCase("claim")) {
 
                 if (playerChunk.isClaimed()) {
-                    player.sendMessage(main.prefix + "Dieser Chunk wurde bereits geclaimt!");
+                    player.sendMessage(main.prefix + "Dieser §cChunk wurde bereits geclaimt!");
                     return true;
                 }
 
@@ -249,13 +250,35 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
                 return true;
             }
 
+            if (args[0].equalsIgnoreCase("unclaim")) {
+
+                // Check if the Chunk is claimed
+                if (!playerChunk.isClaimed()) {
+                    player.sendMessage(main.prefix + "Dieser §cChunk §7gehört niemanden!");
+                    return true;
+                }
+
+                // Check if the Sender is the Chunk claimer
+                if (!playerChunk.getRole().equals(ChunkRole.OWNER)) {
+                    player.sendMessage(main.prefix + "Du bist nicht berechtigt den §cChunk§7, von §c" + playerChunk.getAuthorName() + " §7zu entsichern!");
+                    return true;
+                }
+
+                playerChunk.setClaimed(false);
+                XChunk.getInstance().chunkCache.reloadPlayerChunk((Player) sender, player.getLocation());
+                player.sendMessage(main.prefix + "Du hast dein §cChunk §aerfolgreich §7aufgelöst.");
+
+            }
+
         }
 
+        player.sendMessage(contents.getUsage("chunk", "info"));
         player.sendMessage(contents.getUsage("chunk", "claim"));
+        player.sendMessage(contents.getUsage("chunk", "unclaim"));
         player.sendMessage(contents.getUsage("chunk", "ban", "Spieler"));
         player.sendMessage(contents.getUsage("chunk", "trust", "Spieler"));
         player.sendMessage(contents.getUsage("chunk", "remove", "Spieler"));
-        player.sendMessage(contents.getUsage("chunk", "info"));
+
         return false;
     }
 
@@ -274,10 +297,11 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
             if (!playerChunk.isClaimed()) {
                 matches.add("claim");
             } else {
-                if (playerChunk.getAuthorUUID().equals(player.getUUID())) {
+                if (playerChunk.getRole().equals(ChunkRole.OWNER)) {
                     matches.add("trust");
                     matches.add("remove");
                     matches.add("ban");
+                    matches.add("unclaim");
                 }
             }
 

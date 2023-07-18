@@ -18,7 +18,6 @@ import com.mongodb.client.MongoDatabase;
 import de.peaqe.devapi.DevAPI;
 import de.peaqe.devapi.objects.PlayerObject;
 import de.peaqe.xchunk.XChunk;
-import de.peaqe.xchunk.manager.ChunkUser;
 import de.peaqe.xchunk.utils.UUIDFetcher;
 import org.bson.Document;
 import org.bukkit.Chunk;
@@ -114,6 +113,15 @@ public class DatabaseProvider {
 
     public boolean chunkClaimed(String chunkID) {
         return this.chunkAuthorUuid(chunkID) != null;
+    }
+
+    public void unclaimChunk(String chunkID) {
+
+        Document document = collection.find(new Document("chunk_id", chunkID)).first();
+        if (document == null) return;
+
+        collection.findOneAndDelete(document);
+
     }
 
     public final String getChunkID(Chunk chunk) {

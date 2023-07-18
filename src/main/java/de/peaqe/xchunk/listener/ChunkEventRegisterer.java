@@ -14,7 +14,7 @@ import de.peaqe.devapi.objects.PlayerObject;
 import de.peaqe.xchunk.cache.PlayerChunkCache;
 import de.peaqe.xchunk.events.ChunkBlockBreakEvent;
 import de.peaqe.xchunk.events.ChunkEnterEvent;
-import de.peaqe.xchunk.manager.ChunkUser;
+import de.peaqe.xchunk.manager.ChunkRole;
 import de.peaqe.xchunk.manager.PlayerChunk;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -56,7 +56,7 @@ public class ChunkEventRegisterer implements Listener {
 
         PlayerChunk chunk = cache.getPlayerChunk(player, block.getLocation());
 
-        if (!(chunk.getRole().equals(ChunkUser.OWNER) || chunk.getRole().equals(ChunkUser.TRUSTED))) {
+        if (!(chunk.getRole().equals(ChunkRole.OWNER) || chunk.getRole().equals(ChunkRole.TRUSTED))) {
             event.setCancelled(true);
         }
 
@@ -78,7 +78,7 @@ public class ChunkEventRegisterer implements Listener {
         PlayerObject joined = new PlayerObject(player);
         PlayerChunk playerChunk = cache.getPlayerChunk(player);
 
-        if (playerChunk.getRole().equals(ChunkUser.BANNED)) {
+        if (playerChunk.getRole().equals(ChunkRole.BANNED)) {
             event.setCancelled(true);
         }
 
@@ -100,7 +100,7 @@ public class ChunkEventRegisterer implements Listener {
         PlayerObject joined = new PlayerObject(player);
         PlayerChunk playerChunk = cache.getPlayerChunk(player, event.getClickedBlock().getLocation());
 
-        if (!(playerChunk.getRole().equals(ChunkUser.OWNER) || playerChunk.getRole().equals(ChunkUser.TRUSTED))) {
+        if (!(playerChunk.getRole().equals(ChunkRole.OWNER) || playerChunk.getRole().equals(ChunkRole.TRUSTED))) {
             event.setCancelled(true);
         }
     }

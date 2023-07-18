@@ -11,7 +11,7 @@ package de.peaqe.xchunk.manager;
  */
 
 @SuppressWarnings(value = "unused")
-public enum ChunkUser {
+public enum ChunkRole {
     VISITOR,
     TRUSTED,
     BANNED,
