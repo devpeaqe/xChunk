@@ -1,0 +1,11 @@
+name: xChunk
+version: '${project.version}'
+main: de.peaqe.xchunk.XChunk
+api-version: '1.18'
+authors:
+  - peaqe
+  - verax
+
+commands:
+  chunk:
+    description: "Chunk Command"
