@@ -15,17 +15,17 @@ import de.peaqe.xchunk.manager.PlayerChunk;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @SuppressWarnings(value = "unused")
 public class PlayerChunkCache {
 
     private final Map<String, PlayerChunk> cache;
+    private final Map<UUID, List<PlayerChunk>> playerChunkHomes;
 
     public PlayerChunkCache() {
         this.cache = new HashMap<>();
+        this.playerChunkHomes = new HashMap<>();
     }
 
     public PlayerChunk getPlayerChunk(Player player) {
@@ -34,6 +34,22 @@ public class PlayerChunkCache {
 
         if (chunk == null) {
             chunk = new PlayerChunk(new PlayerObject(player));
+            cache.put(cacheKey, chunk);
+        }
+
+        return chunk;
+    }
+
+    public PlayerChunk getPlayerChunk(PlayerObject playerObject) {
+        UUID playerUUID = playerObject.getUUID();
+        int chunkX = playerObject.getLocation().getChunk().getX();
+        int chunkZ = playerObject.getLocation().getChunk().getZ();
+        String chunkID = chunkX + "." + chunkZ;
+        String cacheKey = playerUUID + "_" + chunkID;
+
+        PlayerChunk chunk = cache.get(cacheKey);
+        if (chunk == null) {
+            chunk = new PlayerChunk(playerObject);
             cache.put(cacheKey, chunk);
         }
 
@@ -50,6 +66,18 @@ public class PlayerChunkCache {
         }
 
         return chunk;
+    }
+
+    public List<PlayerChunk> getPlayerChunkHomes(UUID playerUUID) {
+        return playerChunkHomes.getOrDefault(playerUUID, new ArrayList<>());
+    }
+
+    public void setPlayerChunkHomes(UUID playerUUID, List<PlayerChunk> chunkHomes) {
+        playerChunkHomes.put(playerUUID, chunkHomes);
+    }
+
+    public int getChunkAmount(UUID playerUUID) {
+        return getPlayerChunkHomes(playerUUID).size();
     }
 
     public String getPlayerChunkCacheKey(Player player, Location location) {

@@ -13,14 +13,19 @@ package de.peaqe.xchunk.provider;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import de.peaqe.devapi.DevAPI;
 import de.peaqe.devapi.objects.PlayerObject;
 import de.peaqe.xchunk.XChunk;
+import de.peaqe.xchunk.manager.PlayerChunk;
 import de.peaqe.xchunk.utils.UUIDFetcher;
 import org.bson.Document;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -76,10 +81,6 @@ public class DatabaseProvider {
                 .append("chunk_autor_name", player_name)
                 .append("chunk_id", chunk_id);
 
-        if (collection.find(new Document("chunk_autor_uuid", player_uuid.toString())).first() != null) {
-            collection.findOneAndDelete(new Document("player_uuid", player_uuid.toString()));
-        }
-
         collection.insertOne(document);
 
     }
@@ -91,6 +92,58 @@ public class DatabaseProvider {
 
         return document.getString("chunk_id");
 
+    }
+
+    public List<PlayerChunk> getChunksByPlayerUUID(UUID playerUUID) {
+        List<PlayerChunk> chunks = new ArrayList<>();
+        Document query = new Document("chunk_autor_uuid", playerUUID.toString());
+
+        try (MongoCursor<Document> cursor = collection.find(query).iterator()) {
+            while (cursor.hasNext()) {
+
+                Document document = cursor.next();
+                String chunkID = document.getString("chunk_id");
+
+                PlayerObject playerObject = new PlayerObject(Bukkit.getPlayer(playerUUID));
+
+                chunks.add(new PlayerChunk(playerObject));
+            }
+        }
+
+        return chunks;
+    }
+
+    public Chunk getChunkFromID(String chunkID, PlayerObject playerObject) {
+        String[] coordinates = chunkID.split("\\.");
+        if (coordinates.length != 2) {
+            return null;
+        }
+
+        int chunkX, chunkZ;
+        try {
+            chunkX = Integer.parseInt(coordinates[0]);
+            chunkZ = Integer.parseInt(coordinates[1]);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+
+        World world = playerObject.getLocation().getWorld();
+        if (world == null) {
+            return null;
+        }
+
+        return world.getChunkAt(chunkX, chunkZ);
+    }
+
+    public List<UUID> getAllUniquePlayerUUIDs() {
+        List<UUID> uuidStrings = new ArrayList<>();
+
+        DistinctIterable<String> uuidsIterable = collection.distinct("chunk_autor_uuid", String.class);
+        for (String uuidString : uuidsIterable) {
+            uuidStrings.add(UUID.fromString(uuidString));
+        }
+
+        return uuidStrings;
     }
 
     public String chunkAuthorName(String chunkID) {

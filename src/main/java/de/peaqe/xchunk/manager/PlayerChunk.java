@@ -11,10 +11,15 @@ package de.peaqe.xchunk.manager;
  */
 
 import de.peaqe.devapi.objects.PlayerObject;
+import de.peaqe.xchunk.XChunk;
 import de.peaqe.xchunk.provider.DatabaseProvider;
 import de.peaqe.xchunk.utils.UUIDFetcher;
+import org.bson.Document;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,12 +36,14 @@ public class PlayerChunk {
     private List<UUID> bannedPlayers;
     private final boolean claimed;
     private ChunkRole role;
+    private final Location location;
 
     public PlayerChunk(PlayerObject player) {
 
         DatabaseProvider provider = new DatabaseProvider();
 
         this.player = player;
+        this.location = player.getLocation();
 
         this.authorUUID = provider.chunkAuthorUuid(provider.getChunkID(player.getLocation().getChunk()));
         this.authorName = provider.chunkAuthorName(provider.getChunkID(player.getLocation().getChunk()));
@@ -62,6 +69,10 @@ public class PlayerChunk {
     public PlayerChunk(PlayerObject player, Location location) {
 
         DatabaseProvider provider = new DatabaseProvider();
+
+        this.player = player;
+        this.location = location;
+
         var chunk = location.getChunk();
 
         this.authorUUID = provider.chunkAuthorUuid(provider.getChunkID(chunk));
@@ -98,7 +109,6 @@ public class PlayerChunk {
         }
     }
 
-
     private PlayerObject getPlayer() {
         if (player == null) {
             throw new IllegalStateException("Player is null in PlayerChunk.");
@@ -108,11 +118,15 @@ public class PlayerChunk {
 
 
     public Chunk getChunk() {
-        return this.getPlayer().getLocation().getChunk();
+        return new DatabaseProvider().getChunkFromID(this.chunkID, this.player);
+    }
+
+    public static Chunk getChunkByID(String chunkID, PlayerObject playerObject) {
+        return new DatabaseProvider().getChunkFromID(chunkID, playerObject);
     }
 
     public Location getLocation() {
-        return this.getPlayer().getLocation();
+        return this.location;
     }
 
     public UUID getAuthorUUID() {
@@ -219,7 +233,17 @@ public class PlayerChunk {
     }
 
     public void claim() {
-        new DatabaseProvider().saveChunk(player, getChunk());
+
+        if (this.getPlayer() == null) {
+            System.out.println("Player is null!");
+            return;
+        }
+
+        new DatabaseProvider().saveChunk(this.getPlayer(), this.getChunk());
+    }
+
+    public static void updatePlayerChunkHomes(UUID uuid) {
+        XChunk.getInstance().chunkCache.setPlayerChunkHomes(uuid, new DatabaseProvider().getChunksByPlayerUUID(uuid));
     }
 
     public ChunkRole getRole() {

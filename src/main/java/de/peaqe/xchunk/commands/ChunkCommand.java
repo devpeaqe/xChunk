@@ -1,24 +1,27 @@
 package de.peaqe.xchunk.commands;
 
 import de.peaqe.devapi.contents.MessageContents;
+import de.peaqe.devapi.objects.PlayerObject;
 import de.peaqe.xchunk.XChunk;
 import de.peaqe.xchunk.cache.PlayerChunkCache;
 import de.peaqe.xchunk.manager.ChunkRole;
 import de.peaqe.xchunk.manager.PlayerChunk;
+import de.peaqe.xchunk.utils.TeleportUtils;
 import de.peaqe.xchunk.utils.UUIDFetcher;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /*
  *
@@ -47,7 +50,8 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
         if (!(sender instanceof Player player)) return true;
 
         MessageContents contents = new MessageContents(main.prefix);
-        PlayerChunk playerChunk = this.cache.getPlayerChunk(player);
+        PlayerChunk playerChunk = this.cache.getPlayerChunk(new PlayerObject(player));
+
 
         if (args.length == 2) {
 
@@ -188,6 +192,39 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
                 player.sendMessage(main.prefix + "Du hast den Spieler §c" + player_name + "§a erfolgreich §7auf deinem §cChunk §7vertraut!");
 
                 return true;
+            } else if (args[0].equalsIgnoreCase("home")) {
+
+                var index = 0;
+
+                try {
+
+                    index = Integer.parseInt(args[1]);
+
+                    if (index <= 0) {
+                        player.sendMessage(main.prefix + "Bitte gebe einen gültigen Index an!");
+                        return true;
+                    }
+
+                } catch (NumberFormatException e) {
+                    player.sendMessage(main.prefix + "Bitte gebe einen gültigen Index an!");
+                    return true;
+                }
+
+                var warp_index = index - 1;
+                if (warp_index >= main.chunkCache.getChunkAmount(player.getUniqueId())) {
+                    player.sendMessage(main.prefix + "Du besitzt derzeit nur §c" + main.chunkCache.getChunkAmount(player.getUniqueId()) + " Chunks§7!");
+                    return true;
+                }
+
+                PlayerChunk targetChunk = main.chunkCache.getPlayerChunkHomes(player.getUniqueId()).get(warp_index);
+                System.out.println(targetChunk.getChunkID());
+                var chunk_location = new TeleportUtils().getChunkLocation(PlayerChunk.getChunkByID(targetChunk.getChunkID(), new PlayerObject(player)));
+
+                player.teleport(chunk_location);
+                player.sendMessage(main.prefix + "Du bist nun bei deinem §c" + index + "§7. §cChunk§7.");
+                player.playSound(player, Sound.ENTITY_PLAYER_LEVELUP, 0.2f, 1.0f);
+
+                return true;
             }
 
         }
@@ -243,6 +280,8 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
 
             if (args[0].equalsIgnoreCase("claim")) {
 
+                playerChunk = main.chunkCache.getPlayerChunk(player);
+
                 if (playerChunk.isClaimed()) {
                     player.sendMessage(main.prefix + "Dieser §cChunk wurde bereits geclaimt!");
                     return true;
@@ -250,7 +289,25 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
 
                 playerChunk.claim();
                 XChunk.getInstance().chunkCache.reloadPlayerChunk(player, player.getLocation());
+
+                PlayerChunk.updatePlayerChunkHomes(player.getUniqueId());
+                player.teleport(new TeleportUtils().getChunkLocation(PlayerChunk.getChunkByID(playerChunk.getChunkID(), new PlayerObject(player))));
+
                 player.sendMessage(main.prefix + "Der Chunk, mit der ID §c" + playerChunk.getChunkID() + " §7wurde §aerfolgreich §7für dich gesichert!");
+
+                return true;
+            } else if (args[0].equalsIgnoreCase("home")) {
+
+                if (cache.getChunkAmount(player.getUniqueId()) <= 0) {
+                    player.sendMessage(main.prefix + "Du besitzt derzeit kein §cChunk§7!");
+                    return true;
+                }
+
+                playerChunk = cache.getPlayerChunkHomes(player.getUniqueId()).get(0);
+                player.teleport(new TeleportUtils().getChunkLocation(PlayerChunk.getChunkByID(playerChunk.getChunkID(), new PlayerObject(player))));
+
+                player.sendMessage(main.prefix + "Du befindest dich nun bei deinem §c1§7. §cChunk§7.");
+                player.playSound(player, Sound.ENTITY_PLAYER_LEVELUP, 0.2f, 1.0f);
 
                 return true;
             }
@@ -271,8 +328,14 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
 
                 playerChunk.setClaimed(false);
                 XChunk.getInstance().chunkCache.reloadPlayerChunk((Player) sender, player.getLocation());
+
+                PlayerChunk.updatePlayerChunkHomes(player.getUniqueId());
+
                 player.sendMessage(main.prefix + "Du hast dein §cChunk §aerfolgreich §7aufgelöst.");
 
+                return true;
+            } else if (args[0].equalsIgnoreCase("home")) {
+                player.performCommand("chunk home 1");
                 return true;
             }
 
@@ -296,7 +359,9 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
         PlayerChunk playerChunk = XChunk.getInstance().chunkCache.getPlayerChunk(player);
 
         if (args.length == 1) {
+
             matches.add("info");
+            matches.add("home");
 
             if (!playerChunk.isClaimed()) {
                 matches.add("claim");
@@ -308,7 +373,16 @@ public class ChunkCommand implements CommandExecutor, TabExecutor {
                     matches.add("unclaim");
                 }
             }
+        }
 
+        if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("home")) {
+                var chunkAmount = main.chunkCache.getChunkAmount(player.getUniqueId());
+
+                for (int i = 1; i <= chunkAmount; i++) {
+                    matches.add(String.valueOf(i));
+                }
+            }
         }
 
         return matches;

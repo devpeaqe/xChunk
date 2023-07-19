@@ -42,7 +42,6 @@ public class ChunkEventRegisterer implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
 
         if (event.isCancelled()) return;
-        if (event.getPlayer().hasPermission("chunks.break.admin")) return;
 
         var player = event.getPlayer();
         var block = event.getBlock();
@@ -53,6 +52,8 @@ public class ChunkEventRegisterer implements Listener {
 
         PlayerChunk chunk = XChunk.getInstance().chunkCache.getPlayerChunk(player, block.getLocation());
 
+        if (event.getPlayer().hasPermission("chunks.break.admin")) return;
+
         if (!(chunk.getRole().equals(ChunkRole.OWNER) || chunk.getRole().equals(ChunkRole.TRUSTED))) {
             event.setCancelled(true);
         }
@@ -61,7 +62,6 @@ public class ChunkEventRegisterer implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onMove(PlayerMoveEvent event) {
-        if (event.getPlayer().hasPermission("chunks.enter.admin")) return;
 
         // TODO: Teleport the Player to the Chunk border
 
@@ -75,6 +75,8 @@ public class ChunkEventRegisterer implements Listener {
         PlayerObject joined = new PlayerObject(player);
         PlayerChunk playerChunk = cache.getPlayerChunk(player);
 
+        if (event.getPlayer().hasPermission("chunks.enter.admin")) return;
+
         if (playerChunk.getRole().equals(ChunkRole.BANNED)) {
             event.setCancelled(true);
         }
@@ -85,7 +87,6 @@ public class ChunkEventRegisterer implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerInteract(PlayerInteractEvent event) {
 
-        if (event.getPlayer().hasPermission("chunks.interact.admin")) return;
         if (event.getClickedBlock() == null) return;
 
         Player player = event.getPlayer();
@@ -96,6 +97,8 @@ public class ChunkEventRegisterer implements Listener {
 
         PlayerObject joined = new PlayerObject(player);
         PlayerChunk playerChunk = cache.getPlayerChunk(player, event.getClickedBlock().getLocation());
+
+        if (event.getPlayer().hasPermission("chunks.interact.admin")) return;
 
         if (!(playerChunk.getRole().equals(ChunkRole.OWNER) || playerChunk.getRole().equals(ChunkRole.TRUSTED))) {
             event.setCancelled(true);
